@@ -1,54 +1,58 @@
-name: Machine Learning Workflow
+name: ML Model CI 2
 
-on:
-  push:
-    branches:
-      - main
+on: [push]
+    
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout du code
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-    - name: Installer les dépendances
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Exécuter bcancer.py et créer l'artefact
+    - name: Train Model
       run: |
         python bcancer.py
-        mv model.pkl $GITHUB_WORKSPACE/model.pkl
-      working-directory: $GITHUB_WORKSPACE
 
-    - name: Archiver l'artefact
+    - name: Save Model
       uses: actions/upload-artifact@v2
       with:
-        name: model-artifact
-        path: $GITHUB_WORKSPACE/model.pkl
+        name: trained-model
+        path: model.pkl
 
   test:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout du code
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-    - name: Installer les dépendances
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Télécharger l'artefact
+    - name: Download Model
       uses: actions/download-artifact@v2
       with:
-        name: model-artifact
-        path: $GITHUB_WORKSPACE/
+        name: trained-model
+        path: .
 
-    - name: Exécuter test.py
+    - name: Test Model
       run: |
         python test.py
